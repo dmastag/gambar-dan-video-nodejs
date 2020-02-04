@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>
+      Base 64 Camera Demo
+    </title>
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+  </head>
+
+  <body>
+    <video id="video" autoplay></video>
+    <button type="button" id="snap">Snap Photo</button>
+    <button type="button" id="send">Send Photo</button>
+    <canvas id="canvas"></canvas>
+
+    <script>
+      HTMLDocument.prototype.ready = new Promise(resolve => {
+        if (document.readyState != 'loading') return resolve();
+        else
+          document.addEventListener('DOMContentLoaded', function() {
+            return resolve();
+          });
+      });
+
+      document.ready.then(async () => {
+        // Grab elements, create settings, etc.
+        const canvas = document.getElementById('canvas');
+        const context = canvas.getContext('2d');
+        const video = document.getElementById('video');
+
+        const mediaConfig = { video: true };
+
+        // Put video listeners into place
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+          const stream = await navigator.mediaDevices.getUserMedia(mediaConfig);
+          //video.src = window.URL.createObjectURL(stream);
+          video.srcObject = stream;
+          video.play();
+        }
+
+        const takePicture = () => {
+          context.drawImage(video, 0, 0, 1280, 720);
+          console.log(canvas.toDataURL());
+        };
+
+        const getVideoSize = () => {
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          video.width = video.videoWidth;
+          video.height = video.videoHeight;
+
+          video.removeEventListener('playing', getVideoSize, false);
+        };
+
+        const sendPhoto = () => {
+          const data = { image: canvas.toDataURL() };
+          fetch('/uploadbase64', {
+            method: 'POST', // or 'PUT'
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+          })
+            .then(response => response.json())
+            .then(data => {
+              console.log('Success:', data);
+            })
+            .catch(error => {
+              console.error('Error:', error);
+            });
+        };
+
+        // Trigger photo take
+        document.getElementById('snap').addEventListener('click', takePicture);
+        video.addEventListener('playing', getVideoSize, false);
+        document.getElementById('send').addEventListener('click', sendPhoto);
+      });
+    </script>
+  </body>
+</html>
