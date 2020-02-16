@@ -5,12 +5,14 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon index.js"
+    "start": "nodemon index.js",
+    "debug": "nodemon --inspect index.js"
   },
   "author": "Julian Alimin",
   "license": "ISC",
   "dependencies": {
     "express": "4.17.1",
+    "jimp": "0.9.3",
     "multer": "1.4.2"
   },
   "devDependencies": {
