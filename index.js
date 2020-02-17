@@ -73,6 +73,39 @@ app.get('/imageJimpWatermark/:fileName', async (req, res) => {
 
 })
 
+app.get('/imageSharpWatermark/:fileName', async (req, res) => {
+
+  const sharp = require("sharp");
+
+  const ORIGINAL_IMAGE = `${uploadFolder}/${req.params.fileName}`;
+  const LOGO = "public/channel-logo.jpg";
+
+  const LOGO_MARGIN_PERCENTAGE = 5;
+
+  const image = sharp(ORIGINAL_IMAGE);
+  const logo = sharp(LOGO);
+
+  const imageMetadata = await image.metadata();
+  logo.resize(Math.round(imageMetadata.width / 10));
+
+  const logoBuffer = await logo.toBuffer();
+  const logoMetadata = await sharp(logoBuffer).metadata();
+
+  const xMargin = Math.round((imageMetadata.width * LOGO_MARGIN_PERCENTAGE) / 100);
+  const yMargin = Math.round((imageMetadata.width * LOGO_MARGIN_PERCENTAGE) / 100);
+
+  const X = imageMetadata.width - logoMetadata.width - xMargin;
+  const Y = imageMetadata.height - logoMetadata.height - yMargin;
+
+  image
+    .composite([{ input: logoBuffer, top: Y, left: X }])
+    .toBuffer((err, buffer) => {
+      res.set("Content-Type", 'image/jpeg')
+      res.send(buffer)
+    })
+
+})
+
 app.post('/uploadbase64', (req, res) => {
 
   const base64Data = req.body.image.replace(/^data:image\/png;base64,/, "")
